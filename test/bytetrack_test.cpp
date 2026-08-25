@@ -91,7 +91,72 @@ int main()
     while (_running_flag) 
     {
         std::unique_lock<std::mutex> lock(video_clone_mutex);
+        cv_frame.wait(lock, []() { return !frame_queue.empty() || !_running_flag; });
+        if (!_running_flag) break;
+        if(frame_queue.empty()) continue;
 
+        FrameData data = frame_queue.front();
+        frame_queue.pop();
+        lock.unlock();
+
+        int key = cv::waitKey(1);
+
+        cv::Mat blob = data.resized_Frame;
+
+        if(model_loaded)
+        {
+            std::cout << "开始推理..." << std::endl;
+            try
+            {
+                //获取模型形状
+                std::vector<int64_t> input_shape = {1, 3, 544, 960};
+                size_t input_tensor_size = blob.total();
+                //确保内存连续
+                if(!blob.isContinuous()) blob = blob.clone();
+
+                Ort::MemoryInfo memory_info("Cpu", OrtDeviceAllocator, 0, OrtMemTypeDefault);
+                Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
+                        memory_info, blob.ptr<float>(), input_tensor_size,
+                        input_shape.data(), input_shape.size()
+                );
+
+                //获取输入输出名称
+
+                Ort::AllocatorWithDefaultOptions allocator;
+                std::vector<std::string> input_names_str;
+                for (size_t i = 0; i < session->GetInputCount(); ++i) {
+                    input_names_str.push_back(session->GetInputNameAllocated(i, allocator).get());
+                }
+
+                std::vector<const char*> input_names;
+                for (const auto& name : input_names_str) {
+                    input_names.push_back(name.c_str());
+                }
+
+                // 输出名称
+                std::vector<std::string> output_names_str;
+                for (size_t i = 0; i < session->GetOutputCount(); ++i) {
+                    output_names_str.push_back(session->GetOutputNameAllocated(i, allocator).get());
+                }
+                std::vector<const char*> output_names;
+                for (const auto& name : output_names_str) {
+                    output_names.push_back(name.c_str());
+                }
+
+
+                 // 推理
+                auto outputs = session->Run(Ort::RunOptions{nullptr},
+                                            input_names.data(), &input_tensor, 1,
+                                            output_names.data(), output_names.size());
+                
+                cv::Size orig_size(data.original_Frame.cols, data.original_Frame.rows);
+            }
+            catch (const std::exception& e) 
+            {
+                std::cerr << "推理失败: " << e.what() << std::endl;
+            }
+        }
+        
     }
 }
 
