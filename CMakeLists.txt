@@ -15,8 +15,9 @@ set(ONNXRUNTIME_ROOT "/opt/onnxruntime")
 
 # 源码收集
 file(GLOB SRC_FILES 
-    ${PROJECT_SOURCE_DIR}/source/*.cpp
-    ${PROJECT_SOURCE_DIR}/botsort/src/*.cpp
+    ${PROJECT_SOURCE_DIR}/test/*.cpp
+    ${PROJECT_SOURCE_DIR}/common/source/*.cpp
+    ${PROJECT_SOURCE_DIR}/TrackMod/botsort/src/*.cpp
 )
 
 # ========== 创建可执行目标 yolo_pre ==========
@@ -24,8 +25,8 @@ add_executable(yolo_pre ${SRC_FILES})
 
 #========target_xxx放到add_executable之后 ==========
 target_include_directories(yolo_pre PRIVATE
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/botsort/inc
+    ${PROJECT_SOURCE_DIR}/common/include
+    ${PROJECT_SOURCE_DIR}/TrackMod/botsort/inc
     ${OpenCV_INCLUDE_DIRS}
     ${ONNXRUNTIME_ROOT}/include
 )
