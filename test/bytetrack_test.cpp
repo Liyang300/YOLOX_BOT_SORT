@@ -90,7 +90,8 @@ int main()
     bool debug_once = false;   // 是否已执行过推理（只执行一次）
     while (_running_flag) 
     {
-        
+        std::unique_lock<std::mutex> lock(video_clone_mutex);
+
     }
 }
 
