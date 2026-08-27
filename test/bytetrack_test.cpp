@@ -15,6 +15,26 @@ void signal_handler(int sig)
 }
 
 
+void convert_yolox2bytetrack(const std::vector<YOLOX_Detection>& yolox_detections, 
+                             std::vector<byte_track::Object>& bytetrack_detections)
+{
+   bytetrack_detections.clear();
+   bytetrack_detections.reserve(yolox_detections.size());
+    for (const auto& det : yolox_detections)
+    {
+        float x = det.x1;
+        float y = det.y1;
+        float w = det.x2 - det.x1;
+        float h = det.y2 - det.y1;
+        bytetrack_detections.emplace_back(byte_track::Rect<float>{x, y, w, h}, det.class_id, det.conf);
+        //等价于
+        // bytetrack_detections.push_back(
+        //     byte_track::Object( byte_track::Rect<float>{x,y,w,h}, det.class_id, det.conf )
+        // );
+    }
+}
+
+
 int main()
 {
     signal(SIGINT, signal_handler);
@@ -66,7 +86,7 @@ int main()
     }
 
     // 初始化跟踪器
-
+    byte_track::BYTETracker tracker(30, 30);
     //主循环（显示视频，按 'd' 打印调试信息）
     bool debug_once = false;   // 是否已执行过推理（只执行一次）
     while (_running_flag) 
@@ -131,6 +151,14 @@ int main()
                                             output_names.data(), output_names.size());
                 
                 cv::Size orig_size(data.original_Frame.cols, data.original_Frame.rows);
+
+                std::vector<TensorInfo> output_tran = postprocess.convertOrtOutput(outputs);
+
+                std::vector<YOLOX_Detection>  dets = postprocess.ONNX_postprocess(output_tran, orig_size, 0.4, 0.4);
+
+
+                std::vector<byte_track::Object> bytetrack_detections;
+                convert_yolox2bytetrack(dets, bytetrack_detections);
             }
             catch (const std::exception& e) 
             {
