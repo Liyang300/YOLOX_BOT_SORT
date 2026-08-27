@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ByteTrack/Rect.h"
+#include "Rect.h"
 
 namespace byte_track
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ByteTrack/Rect.h"
-#include "ByteTrack/KalmanFilter.h"
+#include "Rect.h"
+#include "KalmanFilter.h"
 
 #include <cstddef>
 

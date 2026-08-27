@@ -2,8 +2,8 @@
 #include "Preprocess.h"
 #include "Postprocess.h"
 #include "manage.h"
-#include "DataType.h"
-#include "BoTSORT.h"
+#include "BYTETracker.h"
+
 
 
 // ---------- 信号处理 ----------
@@ -14,24 +14,6 @@ void signal_handler(int sig)
     cv_frame.notify_all();
 }
 
-std::vector<Detection> convert_to_tracker_format(const std::vector<YOLOX_Detection>& yolox_detections)
-{
-    std::vector<Detection> Dets;
-    Dets.reserve(yolox_detections.size());
-
-    for(const auto& yolo_detection : yolox_detections)
-    {
-        Detection Det;
-        Det.bbox_tlwh = cv::Rect_(yolo_detection.x1, 
-                                  yolo_detection.y1,
-                                  yolo_detection.x2 - yolo_detection.x1,
-                                  yolo_detection.y2 - yolo_detection.y1);
-        Det.class_id = yolo_detection.class_id;
-        Det.confidence = yolo_detection.conf;
-        Dets.push_back(Det);
-    }
-    return Dets;
-}
 
 int main()
 {
@@ -84,7 +66,6 @@ int main()
     }
 
     // 初始化跟踪器
-    BoTSORT tracker("../config/tracker.ini", "../config/gmc.ini");
 
     //主循环（显示视频，按 'd' 打印调试信息）
     bool debug_once = false;   // 是否已执行过推理（只执行一次）

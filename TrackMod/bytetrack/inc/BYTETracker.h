@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ByteTrack/STrack.h"
-#include "ByteTrack/lapjv.h"
-#include "ByteTrack/Object.h"
+#include "STrack.h"
+#include "lapjv.h"
+#include "Object.h"
 
 #include <cstddef>
 #include <limits>

@@ -13,26 +13,60 @@ find_package(Eigen3 REQUIRED)
 # ONNX Runtime
 set(ONNXRUNTIME_ROOT "/opt/onnxruntime")
 
-# 源码收集
-file(GLOB SRC_FILES 
-    ${PROJECT_SOURCE_DIR}/test/*.cpp
-    ${PROJECT_SOURCE_DIR}/common/source/*.cpp
-    ${PROJECT_SOURCE_DIR}/TrackMod/botsort/src/*.cpp
+set(MY_COMMON_INC
+    ${PROJECT_SOURCE_DIR}/common/include
 )
 
-# ========== 创建可执行目标 yolo_pre ==========
-add_executable(yolo_pre ${SRC_FILES})
+# 源码收集，公共资源
+file(GLOB COMMON_SRC 
+    ${PROJECT_SOURCE_DIR}/common/source/*.cpp
+)
+
+# ---------------------- Bytetrack 可执行文件 ----------------------
+# bytetrack专属源码：bytetrack src + bytetrack自己的main
+file(GLOB BYTETRACK_SRC
+    ${PROJECT_SOURCE_DIR}/test/bytetrack_test.cpp   # bytetrack的main
+    ${PROJECT_SOURCE_DIR}/TrackMod/bytetrack/src/*.cpp
+    ${COMMON_SRC}
+)
+
+# ========== 创建可执行目标 ==========
+add_executable(app_bytetrack ${BYTETRACK_SRC})
 
 #========target_xxx放到add_executable之后 ==========
-target_include_directories(yolo_pre PRIVATE
-    ${PROJECT_SOURCE_DIR}/common/include
-    ${PROJECT_SOURCE_DIR}/TrackMod/botsort/inc
+target_include_directories(app_bytetrack PRIVATE
+    ${PROJECT_SOURCE_DIR}/TrackMod/bytetrack/inc
     ${OpenCV_INCLUDE_DIRS}
     ${ONNXRUNTIME_ROOT}/include
+    ${MY_COMMON_INC}
 )
 
 # 链接库
-target_link_libraries(yolo_pre
+target_link_libraries(app_bytetrack
+    ${OpenCV_LIBS}
+    Eigen3::Eigen
+    ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so
+)
+
+# ---------------------- Botsort 可执行文件 ----------------------
+# botsort专属源码：botsort src + botsort自己的main
+file(GLOB BOTSORT_SRC
+    ${PROJECT_SOURCE_DIR}/test/botsort_test.cpp   # botsort的main
+    ${PROJECT_SOURCE_DIR}/TrackMod/botsort/src/*.cpp
+    ${COMMON_SRC}
+)
+
+add_executable(app_botsort ${BOTSORT_SRC})
+
+target_include_directories(app_botsort PRIVATE
+    ${PROJECT_SOURCE_DIR}/TrackMod/botsort/inc
+    ${OpenCV_INCLUDE_DIRS}
+    ${ONNXRUNTIME_ROOT}/include
+    ${MY_COMMON_INC}
+)
+
+# 链接库
+target_link_libraries(app_botsort
     ${OpenCV_LIBS}
     Eigen3::Eigen
     ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so

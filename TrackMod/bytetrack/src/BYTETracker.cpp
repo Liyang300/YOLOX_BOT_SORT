@@ -1,4 +1,4 @@
-#include "ByteTrack/BYTETracker.h"
+#include "BYTETracker.h"
 
 #include <cstddef>
 #include <limits>

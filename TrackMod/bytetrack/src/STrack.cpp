@@ -1,4 +1,4 @@
-#include "ByteTrack/STrack.h"
+#include "STrack.h"
 
 #include <cstddef>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Eigen/Dense"
+#include <eigen3/Eigen/Cholesky>
 
 namespace byte_track
 {
