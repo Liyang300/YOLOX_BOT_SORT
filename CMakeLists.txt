@@ -17,13 +17,12 @@ set(MY_COMMON_INC
     ${PROJECT_SOURCE_DIR}/common/include
 )
 
-# 源码收集，公共资源
+# 公共
 file(GLOB COMMON_SRC 
     ${PROJECT_SOURCE_DIR}/common/source/*.cpp
 )
 
 # ---------------------- Bytetrack 可执行文件 ----------------------
-# bytetrack专属源码：bytetrack src + bytetrack自己的main
 file(GLOB BYTETRACK_SRC
     ${PROJECT_SOURCE_DIR}/test/bytetrack_test.cpp   # bytetrack的main
     ${PROJECT_SOURCE_DIR}/TrackMod/bytetrack/src/*.cpp
@@ -33,7 +32,7 @@ file(GLOB BYTETRACK_SRC
 # ========== 创建可执行目标 ==========
 add_executable(app_bytetrack ${BYTETRACK_SRC})
 
-#========target_xxx放到add_executable之后 ==========
+#========target在add_executable之后 ==========
 target_include_directories(app_bytetrack PRIVATE
     ${PROJECT_SOURCE_DIR}/TrackMod/bytetrack/inc
     ${OpenCV_INCLUDE_DIRS}
