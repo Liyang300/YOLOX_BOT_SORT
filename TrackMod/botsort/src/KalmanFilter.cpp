@@ -11,6 +11,18 @@ KalmanFilter::KalmanFilter(double dt)
     _init_kf_matrices(dt);
 }
 
+void KalmanFilter::set_dt(double dt)
+{
+    // Only the state transition matrix embeds dt (constant-velocity model:
+    // x += vx*dt). The measurement matrix and noise terms are dt-independent,
+    // so rebuilding just this matrix is sufficient and keeps predict() untouched.
+    _state_transition_matrix.setIdentity();
+    for (Eigen::Index i = 0; i < 4; i++)
+    {
+        _state_transition_matrix(i, i + 4) = static_cast<float>(dt);
+    }
+}
+
 void KalmanFilter::_init_kf_matrices(double dt)
 {
     // This is a 4x8 matrix that maps the 8-dimensional state space vector [x, y, w, h, vx, vy, vw, vh]
@@ -85,11 +97,13 @@ KalmanFilter::project(const KFStateSpaceVec &mean,
     //                 .square()
     //                 .matrix();
 
-    // 修改为：位置使用标准噪声，尺寸使用放大 5~10 倍的噪声
-    float size_noise_factor = 8.0;  // 可调，建议 5~10
+    // 修改为：位置 + 尺寸各自可调的噪声放大系数
+    // 对"位移"宽容 -> 调大 position_noise_factor；对"宽高变化"宽容 -> 调大 size_noise_factor
+    float position_noise_factor = 2.0;  // 位移宽容，建议 1.5~3.0
+    float size_noise_factor = 8.0;      // 宽高变化宽容，建议 5~10
     Eigen::Array4f weight_vec;
-        weight_vec << _std_weight_position,
-                _std_weight_position,
+        weight_vec << _std_weight_position * position_noise_factor,
+                _std_weight_position * position_noise_factor,
                 _std_weight_position * size_noise_factor,
                 _std_weight_position * size_noise_factor;
 

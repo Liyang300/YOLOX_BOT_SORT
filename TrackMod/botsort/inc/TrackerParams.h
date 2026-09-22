@@ -14,7 +14,7 @@ struct TrackerParams
     float proximity_thresh{0.5F};
     float appearance_thresh{0.25F};
     std::string gmc_method_name{"sparseOptFlow"};
-    long frame_rate{30};
+    long frame_rate{6};
     float lambda{0.985F};
 
     static TrackerParams load_config(const std::string &config_path);

@@ -1,5 +1,7 @@
 #include "BoTSORT.h"
 
+#include <algorithm>
+#include <chrono>
 #include <optional>
 #include <unordered_set>
 
@@ -190,8 +192,23 @@ BoTSORT::track(const std::vector<Detection> &detections, const cv::Mat &frame)
     std::vector<std::shared_ptr<Track>> tracks_pool;
     tracks_pool = _merge_track_lists(tracked_tracks, _lost_tracks);
 
-    // Predict the location of the tracks with KF (even for lost tracks)
+    // ---- 用真实流逝时间更新 KF 的时间步长 dt ----
+    // 不再依赖写死的 1/_frame_rate；无论 CPU 推理快慢、是否跳帧，
+    // 预测步长都等于两次 track() 之间的真实间隔，预测框才不会落在旧位置。
+    {
+        auto now = std::chrono::steady_clock::now();
+        double real_dt = 1.0 / static_cast<double>(_frame_rate); // 首次调用兜底
+        if (_last_track_time.has_value())
+        {
+            double elapsed = std::chrono::duration<double>(
+                    now - _last_track_time.value()).count();
+            real_dt = std::clamp(elapsed, 1e-3, 0.5); // 夹在 [1ms, 500ms] 防异常
+        }
+        _last_track_time = now;
+        _kalman_filter->set_dt(real_dt);
+    }
 
+    // Predict the location of the tracks with KF (even for lost tracks)
     Track::multi_predict(tracks_pool, *_kalman_filter);
 
 

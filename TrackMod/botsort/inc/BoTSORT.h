@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+#include <optional>
 #include <string>
 #include <variant>
 
@@ -99,6 +101,7 @@ private:
     float _track_high_thresh, _track_low_thresh, _new_track_thresh,
             _match_thresh, _proximity_thresh, _appearance_thresh, _lambda;
     unsigned int _frame_id;
+    std::optional<std::chrono::steady_clock::time_point> _last_track_time;
 
     std::vector<std::shared_ptr<Track>> _tracked_tracks;
     std::vector<std::shared_ptr<Track>> _lost_tracks;
