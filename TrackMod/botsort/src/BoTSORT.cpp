@@ -1,7 +1,5 @@
 #include "BoTSORT.h"
 
-#include <algorithm>
-#include <chrono>
 #include <optional>
 #include <unordered_set>
 
@@ -58,13 +56,8 @@ BoTSORT::BoTSORT(const Config<TrackerParams> &tracker_config,
 
     // Tracker module
     _frame_id = 0;
-    _elapsed_time = 0.0;
-    // 失联保留时间改为真实秒数，与调用频率/frame_rate 彻底解耦。
-    // max_time_lost_sec>0 时用 ini 显式值；否则回退 track_buffer/30 的默认秒数。
-    // 无人机飞远想更久不被删，直接调大 ini 里的 max_time_lost_sec。
-    _max_time_lost_sec = (tracker_params.max_time_lost_sec > 0.0F)
-                             ? static_cast<double>(tracker_params.max_time_lost_sec)
-                             : static_cast<double>(_track_buffer) / 30.0;
+    _buffer_size = static_cast<uint8_t>(_frame_rate / 30.0 * _track_buffer);
+    _max_time_lost = _buffer_size;
     _kalman_filter = std::make_unique<KalmanFilter>(
             static_cast<double>(1.0 / _frame_rate));
 
@@ -197,25 +190,8 @@ BoTSORT::track(const std::vector<Detection> &detections, const cv::Mat &frame)
     std::vector<std::shared_ptr<Track>> tracks_pool;
     tracks_pool = _merge_track_lists(tracked_tracks, _lost_tracks);
 
-    // ---- 用真实流逝时间更新 KF 的时间步长 dt ----
-    // 不再依赖写死的 1/_frame_rate；无论 CPU 推理快慢、是否跳帧，
-    // 预测步长都等于两次 track() 之间的真实间隔，预测框才不会落在旧位置。
-    {
-        auto now = std::chrono::steady_clock::now();
-        double real_dt = 1.0 / static_cast<double>(_frame_rate); // 首次调用兜底
-        if (_last_track_time.has_value())
-        {
-            double elapsed = std::chrono::duration<double>(
-                    now - _last_track_time.value()).count();
-            real_dt = std::clamp(elapsed, 1e-3, 0.2); // 夹在 [1ms, 500ms] 防异常
-        }
-        _last_track_time = now;
-        _kalman_filter->set_dt(real_dt);
-        _elapsed_time += real_dt;
-        _frame_time[_frame_id] = _elapsed_time;
-    }
-
     // Predict the location of the tracks with KF (even for lost tracks)
+
     Track::multi_predict(tracks_pool, *_kalman_filter);
 
 
@@ -414,21 +390,11 @@ BoTSORT::track(const std::vector<Detection> &detections, const cv::Mat &frame)
   
     for (const std::shared_ptr<Track> &track : _lost_tracks)
     {
-        // 用真实秒数判定失联超时：当前累计时间 - 该轨迹最后一次被观测帧的时间戳
-        auto it = _frame_time.find(track->end_frame());
-        double seen = (it != _frame_time.end()) ? it->second : 0.0;
-        if (_elapsed_time - seen > _max_time_lost_sec)
+        if (_frame_id - track->end_frame() > _max_time_lost)
         {
             track->mark_removed();
             removed_tracks.push_back(track);
         }
-    }
-
-    // 清理过期帧时间戳，避免 _frame_time 无限增长（仅保留窗口内的近期帧）
-    while (!_frame_time.empty() &&
-           _elapsed_time - _frame_time.begin()->second > _max_time_lost_sec)
-    {
-        _frame_time.erase(_frame_time.begin());
     }
    
 

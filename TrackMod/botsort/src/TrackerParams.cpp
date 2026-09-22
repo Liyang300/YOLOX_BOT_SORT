@@ -39,8 +39,6 @@ TrackerParams TrackerParams::load_config(const std::string &config_path)
                               config.gmc_method_name);
     tracker_config.LoadInteger(tracker_name, "frame_rate", config.frame_rate);
     tracker_config.LoadFloat(tracker_name, "lambda", config.lambda);
-    tracker_config.LoadFloat(tracker_name, "max_time_lost_sec",
-                             config.max_time_lost_sec);
 
     return config;
 }

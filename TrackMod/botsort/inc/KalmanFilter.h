@@ -15,16 +15,6 @@ public:
     explicit KalmanFilter(double dt);
 
     /**
-     * @brief Update the time interval used by the state transition matrix.
-     *        Call this with the REAL elapsed time between track() calls so the
-     *        predictor uses the true motion step instead of the nominal 1/FPS.
-     *        This keeps the predicted box aligned with the target even when the
-     *        processing rate drops or frames are skipped.
-     * @param dt Time interval in seconds.
-     */
-    void set_dt(double dt);
-
-    /**
      * @brief Initialize the Kalman Filter with a measurement (detection).
      * 
      * @param det Detection [x-center, y-center, width, height].

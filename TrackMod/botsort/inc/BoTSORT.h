@@ -1,11 +1,7 @@
 #pragma once
 
-#include <chrono>
-#include <map>
-#include <optional>
 #include <string>
 #include <variant>
-#include <vector>
 
 #include "GlobalMotionCompensation.h"
 #include "GmcParams.h"
@@ -99,14 +95,10 @@ private:
 private:
     std::string _gmc_method_name;
     bool _reid_enabled, _gmc_enabled;
-    uint8_t _track_buffer, _frame_rate;
-    double _max_time_lost_sec;        // 失联保留的真实秒数（替代原帧计数 _max_time_lost）
-    double _elapsed_time{0.0};        // 累积真实流逝时间（秒）
-    std::map<uint32_t, double> _frame_time; // 帧号 -> 该帧累计时间，仅保留近期窗口，用于失联超时判定
+    uint8_t _track_buffer, _frame_rate, _buffer_size, _max_time_lost;
     float _track_high_thresh, _track_low_thresh, _new_track_thresh,
             _match_thresh, _proximity_thresh, _appearance_thresh, _lambda;
     unsigned int _frame_id;
-    std::optional<std::chrono::steady_clock::time_point> _last_track_time;
 
     std::vector<std::shared_ptr<Track>> _tracked_tracks;
     std::vector<std::shared_ptr<Track>> _lost_tracks;
