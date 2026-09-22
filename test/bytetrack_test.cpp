@@ -159,6 +159,25 @@ int main()
 
                 std::vector<byte_track::Object> bytetrack_detections;
                 convert_yolox2bytetrack(dets, bytetrack_detections);
+
+                auto tracked = tracker.update(bytetrack_detections);
+
+                cv::Mat vis = data.original_Frame.clone();   // 框是原图坐标，画回原图
+                for (const auto& t : tracked)
+                {
+                    const auto& r  = t->getRect();
+                    const int id   = static_cast<int>(t->getTrackId());
+
+                    cv::rectangle(vis,
+                        cv::Rect(cvRound(r.x()), cvRound(r.y()), cvRound(r.width()), cvRound(r.height())),
+                        cv::Scalar(0, 255, 0), 2);
+                    cv::putText(vis, std::to_string(id),
+                        cv::Point(cvRound(r.x()), cvRound(r.y()) - 5),
+                        cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 0), 2);
+                }
+                cv::imshow("ByteTrack", vis);
+                cv::waitKey(1);
+
             }
             catch (const std::exception& e) 
             {
@@ -167,6 +186,10 @@ int main()
         }
         
     }
+    
+    preprocess.thread_stop();
+    std::cout << "main thread exit" << std::endl;
+    return 0;
 }
 
 
