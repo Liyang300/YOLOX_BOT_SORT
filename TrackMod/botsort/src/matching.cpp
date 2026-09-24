@@ -174,6 +174,13 @@ void fuse_motion(const KalmanFilter &KF, CostMatrix &cost_matrix,
             //     cost_matrix(i, j) = std::numeric_limits<float>::infinity();
             // }
 
+
+            // float dmah_raw = gating_distance[j];
+            // float thresh = gating_threshold;
+            // float dmah_norm = std::min(dmah_raw / thresh, 1.0f);
+            // cost_matrix(i, j) = lambda * cost_matrix(i, j) +
+            //                     (1 - lambda) * dmah_norm;
+
             cost_matrix(i, j) = lambda * cost_matrix(i, j) +
                                 (1 - lambda) * gating_distance[j];
         }

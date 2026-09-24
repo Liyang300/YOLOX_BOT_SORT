@@ -235,7 +235,7 @@ BoTSORT::track(const std::vector<Detection> &detections, const cv::Mat &frame)
     
 
     
-    fuse_motion(*_kalman_filter, iou_dists, tracks_pool, detections_high_conf, _lambda, false);
+    fuse_motion(*_kalman_filter, iou_dists, tracks_pool, detections_high_conf, _lambda, true);
 
     std::cout << "iou_dists matrix (rows=" << iou_dists.rows() << ", cols=" << iou_dists.cols() << "):\n";
     for (int i = 0; i < iou_dists.rows(); ++i) {
